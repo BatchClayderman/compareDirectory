@@ -30,4 +30,4 @@ The situation that the operating system is case sensitive but the switch of case
 
 The script is reconstructed using multiple classes. 
 
-The language is uniformed to English. 
+The language is unified. All prompts for interactions are in English. 
