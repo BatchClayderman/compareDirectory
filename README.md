@@ -29,3 +29,5 @@ The situation that the operating system is case sensitive but the switch of case
 ## v3.0
 
 The script is reconstructed using multiple classes. 
+
+The language is uniformed to English. 
