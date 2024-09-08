@@ -1,4 +1,4 @@
-# compareDirectory
+# directoryComparator
 
 This script is used to compare two directories. 
 
@@ -29,5 +29,7 @@ The situation that the operating system is case sensitive but the switch of case
 ## v3.0
 
 The script is reconstructed using multiple classes. 
+
+A switch to indicate whether the soft links should be enabled is provided for non-Windows systems. 
 
 The language is unified. All prompts for interactions are in English. 
