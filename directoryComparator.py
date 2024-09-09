@@ -27,19 +27,14 @@ class ProgressBar:
 				self.__print()
 				return False
 			else:
-				return self.__print()
+				self.__print()
+				return True
 		else:
 			return False
 	def set_postfix(self:object, postfix:str) -> None:
 		self.__postfix = str(postfix)
 	def __print(self:object) -> bool:
-		string = str(self)
-		if len(string) <= self.__ncols:
-			print("\r" + string + " " * (self.__ncols - len(string)), end = "")
-			return True
-		else:
-			print("\r" + string[:self.__ncols], end = "")
-			return False
+		print("\r" + " " * self.__ncols + "\r" + str(self)[:self.__ncols], end = "")
 	def __str__(self:object) -> str:
 		return "{0}: {1} / {2} = {3:.2f}% {4}".format(self.__desc, self.__c, self.__total, 100 * self.__c / self.__total, self.__postfix)
 
@@ -84,9 +79,9 @@ class Comparison:
 		except Exception as e:
 			return e
 	def __consoleLayerUp(self:object) -> None:
-		print("\r" + " " * self.__ncols + "\x1b[F\x1b[K", end = "") # go up a layer
+		print("\r" + " " * self.__ncols + "\x1b[F\x1b[K", end = "", flush = True) # go up a layer
 	def __consoleLayerDown(self:object) -> None:
-		print() # go down a layer
+		print(flush = True) # go down a layer
 	def __compare(self:object, dir1:str, dir2:str, layer:int = 0) -> bool:
 		# List Getting #
 		try: # sort the items received from the OS API and exclude some special folders
@@ -96,8 +91,6 @@ class Comparison:
 				listDir1 = sorted([item for item in os.listdir(dir1) if item not in self.__specialFolders], key = lambda x:x.upper())
 				listDir2 = sorted([item for item in os.listdir(dir2) if item not in self.__specialFolders], key = lambda x:x.upper())
 		except Exception as e:
-			print(e)
-			input()
 			self.__exceptionList.append((self.__getRelPath(dir1, self.__sourcePath), e))
 			self.__consoleLayerUp()
 			return False
@@ -328,32 +321,27 @@ class Comparison:
 		return not bool(failureExceptionList)
 	def __doComparison(self:object) -> bool:
 		clearScreen()
+		print("Working directory: \"{0}\"".format(os.getcwd()))
+		print("Source: \"{0}\"".format(self.__sourcePath))
+		print("Target: \"{0}\"".format(self.__targetPath))
+		print()
 		if self.__sourcePath == self.__targetPath or not self.__caseSensitive and self.__sourcePath.upper() == self.__targetPath.upper():
-			print("The source path \"{0}\" and the target path \"{1}\" are the same. ".format(self.__sourcePath, self.__targetPath))
+			print("The source path and the target path are the same. ")
 			pause()
 			self.__flag = 2 # force users to input data again
-			try:
-				input()
-			except:
-				pass
 			return False
 		elif not os.path.isdir(self.__sourcePath) or not self.__enableSoftLinks and os.path.islink(self.__sourcePath):
-			print("The source path \"{0}\" does not exist. ".format(self.__sourcePath))
+			if not os.path.isdir(self.__targetPath) or not self.__enableSoftLinks and os.path.islink(self.__targetPath):
+				print("Both the source path and the target path do not exist or neither of them are valid directories. ")
+			else:
+				print("The source path does not exist or is not a valid directory. ")
 			pause()
 			self.__flag = 2 # force users to input data again
-			try:
-				input()
-			except:
-				pass
 			return False
 		elif not os.path.isdir(self.__targetPath) or not self.__enableSoftLinks and os.path.islink(self.__targetPath):
-			print("The target path \"{0}\" does not exist. ".format(self.__targetPath))
+			print("The target path does not exist or is not a valid directory. ")
 			pause()
 			self.__flag = 2 # force users to input data again
-			try:
-				input()
-			except:
-				pass
 			return False
 		else:
 			self.__addingList.clear()
@@ -361,9 +349,6 @@ class Comparison:
 			self.__conflictList.clear()
 			self.__exceptionList.clear()
 			self.__differenceList.clear()
-			print("Source: \"{0}\"".format(self.__sourcePath))
-			print("Target: \"{0}\"".format(self.__targetPath))
-			print()
 			try:
 				self.__compare(self.__sourcePath, self.__targetPath)
 			except BaseException as e:
@@ -441,20 +426,21 @@ class Comparison:
 			clearScreen()
 			if self.__flag > 1 or self.__sourcePath is None and self.__targetPath is None and self.__compareFileContent is None and self.__caseSensitive is None:
 				try:
+					print("Note: Please press \"Ctrl + C\" to enter the data again if wrong data are accidentally input. \nWorking directory: \"{0}\"".format(os.getcwd()))
 					self.__sourcePath = input("Please input the source path (leave it blank to exit): ").replace("\"", "")
 					if ""  == self.__sourcePath:
 						break
 					self.__targetPath = input("Please input the target path (leave it blank to exit): ").replace("\"", "")
 					if ""  == self.__targetPath:
 						break
-					self.__compareFileContent = input("Please answer whether the file contents should be compared (default = N): ").upper() in ("1", "T", "TRUE", "Y", "YES")
+					self.__compareFileContent = input("Please answer whether the file contents should be compared [yN]: ").upper() in ("1", "T", "TRUE", "Y", "YES")
 					print("The current operating system {0} case sensitive. ".format("is not" if "WINDOWS" == PLATFORM else "is"))
-					self.__caseSensitive = input("Please answer whether it should be case sensitive (default = N): ").upper() in ("1", "T", "TRUE", "Y", "YES")
+					self.__caseSensitive = input("Please answer whether it should be case sensitive [yN]: ").upper() in ("1", "T", "TRUE", "Y", "YES")
 					if "WINDOWS" == PLATFORM:
 						self.__enableSoftLinks = False
 					else:
 						print("The current operating system supports soft links. Please use \"Ctrl + C\" if infinite recursion occurs. ")
-						self.__enableSoftLinks = input("Please answer whether soft links should be enabled (default = N): ").upper() in ("1", "T", "TRUE", "Y", "YES")
+						self.__enableSoftLinks = input("Please answer whether soft links should be enabled [yN]: ").upper() in ("1", "T", "TRUE", "Y", "YES")
 				except: # KeyboardInterrupt
 					self.__sourcePath, self.__targetPath, self.__compareFileContent, self.__caseSensitive, self.__enableSoftLinks = None, None, None, None, False
 					continue
@@ -488,14 +474,15 @@ def preExit(countdownTime:int = 5) -> None:
 		length = len(str(cntTime))
 	except:
 		print("Program ended. ")
+		clearScreen()
 		return
 	while cntTime > 0:
 		print("\rProgram ended, exiting in {{0:>{0}}} second(s). ".format(length).format(cntTime), end = "")
 		try:
 			sleep(1)
 		except:
-			print("\rProgram ended, exiting in {{0:>{0}}} second(s). ".format(length).format(0))
-			return
+			cntTime = 0
+			break
 		cntTime -= 1
 	print("\rProgram ended, exiting in {{0:>{0}}} second(s). ".format(length).format(cntTime))
 	clearScreen()
