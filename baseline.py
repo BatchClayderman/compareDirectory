@@ -79,7 +79,7 @@ def main() -> int:
 		input()
 		return EXIT_SUCCESS if bRet else EXIT_FAILURE
 	except BaseException as e:
-		print(e)
+		print("Exceptions occurred. Details are as follows. \n{0}".format(e))
 		input()
 		return EOF
 
