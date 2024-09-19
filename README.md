@@ -10,13 +10,17 @@ This script is used to compare two directories.
 6) This script provides systematic copying and removing operations (it takes me about an evening).
 7) This script can handle soft links (it takes me about two hours). 
 
-## Premiliary Concepts
+### Premiliary Concepts
 
 ``Folder = Real Folder + Virtual Folder = Directory + Virtual Folder``
 
 ``Object = Folder + File + Soft Link``
 
 If soft links are not enabled, we regard soft links and paths they linked to as files and file content. 
+
+### Baseline
+
+The baseline method gathers all the information together first and computs comparison results subsequently. 
 
 ## v1.0
 
@@ -43,3 +47,5 @@ A switch to indicate whether the soft links should be enabled is provided for no
 The language is unified. All prompts for interactions are in English. 
 
 Systematic copying and removing operations with progress pars are provided. 
+
+A time counter is provided. 
