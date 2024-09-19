@@ -48,4 +48,4 @@ The language is unified. All prompts for interactions are in English.
 
 Systematic copying and removing operations with progress pars are provided. 
 
-A time counter is provided. 
+A time counter with friendly expressions is provided. 
