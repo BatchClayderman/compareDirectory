@@ -251,7 +251,7 @@ class Comparison:
 			sRet = input("Please select an operation to continue: ").upper()
 		except:
 			sRet = None
-		availabilityList = ([1, 2] if addingFlag else []) + ([3, 4] if removalFlag else []) + ([5, 6] if differenceFlag else []) + (["S", "T"] if addingFlag or removalFlag or differenceFlag else []) + ["D", "R", "N", "E"]
+		availabilityList = (["1", "2"] if addingFlag else []) + (["3", "4"] if removalFlag else []) + (["5", "6"] if differenceFlag else []) + (["S", "T"] if addingFlag or removalFlag or differenceFlag else []) + ["D", "R", "N", "E"]
 		while True:
 			if sRet in availabilityList:
 				if sRet in ("D", "R", "N", "E") or input("The program is about to execute Operation {0}. \nTo avoid accidental touch, please input \"Y\" before the program goes on: ".format(sRet)) == "Y":
