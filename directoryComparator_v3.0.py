@@ -2,7 +2,7 @@ import os
 from sys import exit
 from shutil import copy, copytree, rmtree
 from hashlib import new as newHash
-from time import sleep
+from time import sleep, time
 EXIT_SUCCESS = 0
 EXIT_FAILURE = 1
 EOF = (-1)
@@ -76,7 +76,7 @@ class Comparison:
 				for chunk in iter(lambda: f.read(1 << 20), b""):
 					hash.update(chunk)
 				return hash.hexdigest()
-		except Exception as e:
+		except BaseException as e:
 			return e
 	def __consoleLayerUp(self:object) -> None:
 		print("\r" + " " * self.__ncols + "\x1b[F\x1b[K", end = "", flush = True) # go up a layer
@@ -90,7 +90,7 @@ class Comparison:
 			else:
 				listDir1 = sorted([item for item in os.listdir(dir1) if item not in self.__specialFolders], key = lambda x:x.upper())
 				listDir2 = sorted([item for item in os.listdir(dir2) if item not in self.__specialFolders], key = lambda x:x.upper())
-		except Exception as e:
+		except BaseException as e:
 			self.__exceptionList.append((self.__getRelPath(dir1, self.__sourcePath), e))
 			self.__consoleLayerUp()
 			return False
@@ -142,7 +142,7 @@ class Comparison:
 							try:
 								link1, link2 = os.readlink(target1), os.readlink(target2)
 								theAbsolutePathsAreDifferent = not (os.path.isabs(link1) and os.path.isabs(link2) and link1 == link2)
-							except Exception as e:
+							except BaseException as e:
 								self.__exceptionList.append((self.__getRelPath(target1, self.__sourcePath), e))
 								self.__consoleLayerUp()
 							if theAbsolutePathsAreDifferent:
@@ -150,7 +150,7 @@ class Comparison:
 									self.__consoleLayerDown()
 									try:
 										self.__compare(target1, target2, layer = layer + 1)
-									except Exception as e:
+									except BaseException as e:
 										self.__exceptionList.append((self.__getRelPath(target1, self.__sourcePath), e))
 										self.__consoleLayerUp()
 								elif os.path.isfile(target1) and os.path.isfile(target2): # both are linked to files
@@ -167,13 +167,13 @@ class Comparison:
 							try:
 								if os.readlink(target1) != os.readlink(target2): # the positions they link to are the file content
 									self.__differenceList.append(self.__getRelPath(target1, self.__sourcePath))
-							except Exception as e:
+							except BaseException as e:
 								self.__exceptionList.append((self.__getRelPath(target1, self.__sourcePath), e))
 					elif os.path.isdir(target1) and os.path.isdir(target2): # do recursion if both are folders
 						self.__consoleLayerDown()
 						try:
 							self.__compare(target1, target2, layer = layer + 1)
-						except Exception as e:
+						except BaseException as e:
 							self.__exceptionList.append((self.__getRelPath(target1, self.__sourcePath), e))
 							self.__consoleLayerUp()
 					elif os.path.isfile(target1) and os.path.isfile(target2): # both are files
@@ -210,7 +210,7 @@ class Comparison:
 				pBar.update(len(listDir2))
 			self.__consoleLayerUp()
 			return True
-		except Exception as e:
+		except BaseException as e:
 			self.__exceptionList.append((self.__getRelPath(dir1, self.__sourcePath), e))
 			self.__exceptionList.append((self.__getRelPath(dir2, self.__targetPath), e))
 			self.__consoleLayerUp()
@@ -280,7 +280,7 @@ class Comparison:
 				else:
 					os.remove(toRemoveFp)
 				successIndexList.append(i)
-			except Exception as e:
+			except BaseException as e:
 				failureExceptionList.append((toRemoveFp, e))
 			pBar.set_postfix = "(s, f) = ({0}, {1})".format(len(successIndexList), len(failureExceptionList))
 			pBar.update(1)
@@ -308,7 +308,7 @@ class Comparison:
 				else:
 					copy(sourceFp, targetFp)
 				successIndexList.append(i)
-			except Exception as e:
+			except BaseException as e:
 				failureExceptionList.append((sourceFp, targetFp, e))
 		self.__consoleLayerUp()
 		for idx in successIndexList[::-1]:
@@ -319,6 +319,20 @@ class Comparison:
 				print("[{0}] \"{1}\" -> \"{2}\" -> {3}".format(i, failureException[0], failureException[1], failureException[2]))
 		print("\rThe copying is finished with the success rate of {0} / {1} = {2}%. ".format(len(successIndexList), totalLength, 100 * len(successIndexList) / totalLength)) # The situation of "/0" should not exist
 		return not bool(failureExceptionList)
+	def __convertTime(self:object, t:float) -> str:
+		if isinstance(t, (float, int)):
+			if t <= 0.000000001: # <= 1 ns
+				return "{0:.3f} nanosecond".format(t * 1000000000)
+			elif t <= 0.000001: # (1 ns, 1000 ns]
+				return "{0:.3f} nanoseconds".format(t * 1000000000)
+			elif t <= 0.001: # (1 us, 1000 us]
+				return "{0:.3f} Microseconds".format(t * 1000000)
+			elif t <= 1: # (1 ms, 1000 ms]
+				return "{0:.3f} milliseconds".format(t * 1000)
+			else: # > 1 s
+				return "{0:.3f} seconds".format(t)
+		else:
+			return "unknown"
 	def __doComparison(self:object) -> bool:
 		clearScreen()
 		print("Working directory: \"{0}\"".format(os.getcwd()))
@@ -349,11 +363,13 @@ class Comparison:
 			self.__conflictList.clear()
 			self.__exceptionList.clear()
 			self.__differenceList.clear()
+			startTime = time()
 			try:
 				self.__compare(self.__sourcePath, self.__targetPath)
 			except BaseException as e:
 				print("\nExceptions occurred. Details are as follows. \n{0}".format(e))
-			print()
+			endTime = time()
+			print("\nNote: The time used is {0}. ".format(self.__convertTime(endTime - startTime)))
 			while True:
 				choice = self.__selectAnOperation(bool(self.__addingList), bool(self.__removalList), bool(self.__differenceList))
 				print()
